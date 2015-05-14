@@ -1,0 +1,24 @@
+Viter Nguyen
+
+Compiler Chosen:
+	chaoslawful/tcc - Tiny C Compiler
+	https://github.com/chaoslawful/tcc
+
+Findings:
+	This compiler can compile itself! 
+	Has configure file to configure itself to adapt to certain operating system
+	It contains an array of built-in commands like display current version,
+	showing list of commands, compiling, debugging and generating runtime.
+	
+	tcc.c - tiny c compiler
+	
+		//uses to convert string into arrays - tokenizing stage
+		static int expand_args(char ***pargv, const char *str);
+		
+		//parsing stage
+		int parse_args(TCCState *s, int argc, char **argv);
+		
+		//Inside a for loop from line line 507 - 523:
+		//it adds a file/library or compile them
+		
+		//after it complie it free all file using the tcc_free(files) function
