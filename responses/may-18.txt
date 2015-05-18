@@ -1,6 +1,7 @@
 What does it mean for two sets to be disjoint?
 
-
+It means that each set has no common value that they share.
 
 What is the union of two sets?
 
+The union of two sets is called merging.
