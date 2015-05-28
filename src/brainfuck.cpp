@@ -107,16 +107,20 @@ class Program : public Container {
  */
 void parse(fstream & file, Container * container) {
     char c;
-    // How to peek at the next character
-    c = (char)file.peek();
-    // How to print out that character
-    cout << c;
-    // How to read a character from the file and advance to the next character
-    file >> c;
-    // How to print out that character
-    cout << c;
-    // How to insert a node into the container.
-    container->children.push_back(new CommandNode(c));
+    Loop * loop;
+	while(file.get(c)) {
+		if(c == '+' || c == '-' || c == '>' || c == '<' || c == '.' || c == ',') {
+			container->children.push_back(new CommandNode(c));
+		}
+		else if (c == '[') {
+			loop = new Loop();
+			container->children.push_back(loop);
+			parse(file, loop);
+		} 
+		else if (c == ']') {
+			return;
+		}
+	}
 }
 
 /**
