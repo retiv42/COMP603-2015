@@ -155,6 +155,7 @@ class Printer : public Visitor {
         }
 };
 
+<<<<<<< HEAD
 class Interpreter : public Visitor {
     public:
         void visit(const CommandNode * leaf) {
@@ -190,6 +191,44 @@ int main(int argc, char *argv[]) {
     Program program;
     Printer printer;
     Interpreter interpreter;
+=======
+class Compiler : public Visitor {
+    public:
+        void visit(const CommandNode * leaf) {
+            switch (leaf->command) {
+                case INCREMENT:   cout << "++*ptr;\n"; break;
+                case DECREMENT:   cout << "--*ptr;\n"; break;
+                case SHIFT_LEFT:  cout << "--ptr;\n"; break;
+                case SHIFT_RIGHT: cout << "++ptr;\n"; break;
+                case INPUT:       cout << "*ptr=getchar();\n"; break;
+                case OUTPUT:      cout << "putchar(*ptr);\n"; break;
+            }
+        }
+        void visit(const Loop * loop) {
+            cout << "while (*ptr) {";
+            for (vector<Node*>::const_iterator it = loop->children.begin(); it != loop->children.end(); ++it) {
+                (*it)->accept(this);
+            }
+            cout << "}";
+        }
+        void visit(const Program * program) {
+            cout << "#include <stdio.h>\n";
+            cout << "char array[30000] = {0};\n";
+            cout << "char *ptr=array;\n";
+            cout << "int main(int argc, char **argv) {\n"
+            for (vector<Node*>::const_iterator it = program->children.begin(); it != program->children.end(); ++it) {
+                (*it)->accept(this);
+            }
+            cout << "}\n";
+        }
+};
+
+
+int main(int argc, char *argv[]) {
+    fstream file;
+    Program program;
+    Compiler printer;
+>>>>>>> 2e179e7bf76151834aba6369fdee838f6c633833
     if (argc == 1) {
         cout << argv[0] << ": No input files." << endl;
     } else if (argc > 1) {
