@@ -155,7 +155,6 @@ class Printer : public Visitor {
         }
 };
 
-<<<<<<< HEAD
 class Interpreter : public Visitor {
     public:
         void visit(const CommandNode * leaf) {
@@ -186,12 +185,6 @@ class Interpreter : public Visitor {
         }
 };
 
-int main(int argc, char *argv[]) {
-    fstream file;
-    Program program;
-    Printer printer;
-    Interpreter interpreter;
-=======
 class Compiler : public Visitor {
     public:
         void visit(const CommandNode * leaf) {
@@ -223,12 +216,11 @@ class Compiler : public Visitor {
         }
 };
 
-
 int main(int argc, char *argv[]) {
     fstream file;
     Program program;
+	Interpreter interpreter;
     Compiler printer;
->>>>>>> 2e179e7bf76151834aba6369fdee838f6c633833
     if (argc == 1) {
         cout << argv[0] << ": No input files." << endl;
     } else if (argc > 1) {
