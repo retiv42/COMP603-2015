@@ -12,12 +12,13 @@ brainfuck.exe helloworld.bf
 #include <vector>
 #include <iostream>
 #include <fstream>
-
+#include <stdio.h>
 using namespace std;
 
 /**
  * Primitive Brainfuck commands
  */
+
 typedef enum { 
     INCREMENT, // +
     DECREMENT, // -
@@ -57,6 +58,7 @@ class Node {
  */
 class CommandNode : public Node {
     public:
+		int count;
         Command command;
         CommandNode(char c) {
             switch(c) {
@@ -109,6 +111,7 @@ void parse(fstream & file, Container * container) {
     char c;
     Loop * loop;
 	while(file.get(c)) {
+
 		if(c == '+' || c == '-' || c == '>' || c == '<' || c == '.' || c == ',') {
 			container->children.push_back(new CommandNode(c));
 		}
@@ -131,14 +134,16 @@ void parse(fstream & file, Container * container) {
 class Printer : public Visitor {
     public:
         void visit(const CommandNode * leaf) {
-            switch (leaf->command) {
-                case INCREMENT:   cout << '+'; break;
-                case DECREMENT:   cout << '-'; break;
-                case SHIFT_LEFT:  cout << '<'; break;
-                case SHIFT_RIGHT: cout << '>'; break;
-                case INPUT:       cout << ','; break;
-                case OUTPUT:      cout << '.'; break;
-            }
+			for(int i=0; i < leaf->count; i++) {
+				switch (leaf->command) {
+					case INCREMENT:   cout << '+'; break;
+					case DECREMENT:   cout << '-'; break;
+					case SHIFT_LEFT:  cout << '<'; break;
+					case SHIFT_RIGHT: cout << '>'; break;
+					case INPUT:       cout << ','; break;
+					case OUTPUT:      cout << '.'; break;
+				}
+			}
         }
         void visit(const Loop * loop) {
             cout << '[';
@@ -157,28 +162,44 @@ class Printer : public Visitor {
 
 class Interpreter : public Visitor {
     public:
+		char array[30000];
+		char *ptr;
         void visit(const CommandNode * leaf) {
-            switch (leaf->command) {
-                case INCREMENT:
-                    break;
-                case DECREMENT:
-                    break;
-                case SHIFT_LEFT:
-                    break;
-                case SHIFT_RIGHT:
-                    break;
-                case INPUT:
-                    break;
-                case OUTPUT:
-                    break;
-            }
+			//for(int i=0; i<leaf->count; i++) {
+				switch (leaf->command) {
+					case INCREMENT:
+						++*ptr;
+						break;
+					case DECREMENT:
+						--*ptr;
+						break;
+					case SHIFT_LEFT:
+						--ptr;
+						break;
+					case SHIFT_RIGHT:
+						++ptr;
+						break;
+					case INPUT:
+						*ptr = getchar();
+						break;
+					case OUTPUT:
+						putchar(*ptr);
+						break;
+				}
+			//}
         }
         void visit(const Loop * loop) {
-            for (vector<Node*>::const_iterator it = loop->children.begin(); it != loop->children.end(); ++it) {
-                (*it)->accept(this);
-            }
+			while(*ptr) {
+				for (vector<Node*>::const_iterator it = loop->children.begin(); it != loop->children.end(); ++it) {
+					(*it)->accept(this);
+				}
+			}
         }
         void visit(const Program * program) {
+			for (int i = 0; i < 30000; i++) {
+				array[i] = 0;
+			}
+			ptr = array;
             for (vector<Node*>::const_iterator it = program->children.begin(); it != program->children.end(); ++it) {
                 (*it)->accept(this);
             }
@@ -208,7 +229,7 @@ class Compiler : public Visitor {
             cout << "#include <stdio.h>\n";
             cout << "char array[30000] = {0};\n";
             cout << "char *ptr=array;\n";
-            cout << "int main(int argc, char **argv) {\n"
+            cout << "int main(int argc, char **argv) {\n";
             for (vector<Node*>::const_iterator it = program->children.begin(); it != program->children.end(); ++it) {
                 (*it)->accept(this);
             }
@@ -227,8 +248,10 @@ int main(int argc, char *argv[]) {
         for (int i = 1; i < argc; i++) {
             file.open(argv[i], fstream::in);
             parse(file, & program);
-//            program.accept(&printer);
+            program.accept(&printer);
+			cout << endl;
             program.accept(&interpreter);
+			cout << endl;
             file.close();
         }
     }
