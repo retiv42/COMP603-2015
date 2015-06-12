@@ -25,7 +25,8 @@ typedef enum {
     SHIFT_LEFT, // <
     SHIFT_RIGHT, // >
     INPUT, // ,
-    OUTPUT // .
+    OUTPUT, // .
+	ZERO
 } Command;
 
 // Forward references. Silly C++!
@@ -60,7 +61,8 @@ class CommandNode : public Node {
     public:
 		int count;
         Command command;
-        CommandNode(char c) {
+        CommandNode(char c, int num) {
+			count = num;
             switch(c) {
                 case '+': command = INCREMENT; break;
                 case '-': command = DECREMENT; break;
@@ -68,8 +70,10 @@ class CommandNode : public Node {
                 case '>': command = SHIFT_RIGHT; break;
                 case ',': command = INPUT; break;
                 case '.': command = OUTPUT; break;
+				case '\0': command = ZERO; break;
             }
         }
+		
         void accept (Visitor * v) {
             v->visit(this);
         }
@@ -109,16 +113,29 @@ class Program : public Container {
  */
 void parse(fstream & file, Container * container) {
     char c;
+	int counter;
     Loop * loop;
+	CommandNode* leaf;
 	while(file.get(c)) {
-
+		counter = 1;
 		if(c == '+' || c == '-' || c == '>' || c == '<' || c == '.' || c == ',') {
-			container->children.push_back(new CommandNode(c));
+			while(file.peek() == c) {
+				file.get(c);
+				counter++;
+			}
+			container->children.push_back(new CommandNode(c, counter));
 		}
 		else if (c == '[') {
 			loop = new Loop();
-			container->children.push_back(loop);
 			parse(file, loop);
+			leaf = (CommandNode*)loop->children[0];
+			// examine your loop's contents
+			if(leaf->count == 1) {
+				if(leaf->command == INCREMENT || leaf->command == DECREMENT) {
+					container->children.push_back(new CommandNode('\0', 1));
+				}
+			}
+			container->children.push_back(loop);
 		} 
 		else if (c == ']') {
 			return;
@@ -165,7 +182,7 @@ class Interpreter : public Visitor {
 		char array[30000];
 		char *ptr;
         void visit(const CommandNode * leaf) {
-			//for(int i=0; i<leaf->count; i++) {
+			for(int i=0; i<leaf->count; i++) {
 				switch (leaf->command) {
 					case INCREMENT:
 						++*ptr;
@@ -185,8 +202,11 @@ class Interpreter : public Visitor {
 					case OUTPUT:
 						putchar(*ptr);
 						break;
+					case ZERO:
+						*ptr = 0;
+						break;
 				}
-			//}
+			}
         }
         void visit(const Loop * loop) {
 			while(*ptr) {
@@ -209,14 +229,16 @@ class Interpreter : public Visitor {
 class Compiler : public Visitor {
     public:
         void visit(const CommandNode * leaf) {
-            switch (leaf->command) {
-                case INCREMENT:   cout << "++*ptr;\n"; break;
-                case DECREMENT:   cout << "--*ptr;\n"; break;
-                case SHIFT_LEFT:  cout << "--ptr;\n"; break;
-                case SHIFT_RIGHT: cout << "++ptr;\n"; break;
-                case INPUT:       cout << "*ptr=getchar();\n"; break;
-                case OUTPUT:      cout << "putchar(*ptr);\n"; break;
-            }
+			for(int i=0; i<leaf->count; i++) {
+				switch (leaf->command) {
+					case INCREMENT:   cout << "++*ptr;\n"; break;
+					case DECREMENT:   cout << "--*ptr;\n"; break;
+					case SHIFT_LEFT:  cout << "--ptr;\n"; break;
+					case SHIFT_RIGHT: cout << "++ptr;\n"; break;
+					case INPUT:       cout << "*ptr=getchar();\n"; break;
+					case OUTPUT:      cout << "putchar(*ptr);\n"; break;
+				}
+			}
         }
         void visit(const Loop * loop) {
             cout << "while (*ptr) {";
