@@ -178,6 +178,8 @@ class Printer : public Visitor {
 };
 
 class Interpreter : public Visitor {
+    char memory[30000];
+    int pointer;
     public:
 		char array[30000];
 		char *ptr;
