@@ -1,0 +1,169 @@
+= Traverse Java Code
+
+== Documentation generator
+Generate Javadoc documentation stubs for code.
+
+For example, this would take code like this:
+
+----
+class Foo {
+    void frobnicate(Something x, SomethingElse y) {
+    /* ... blah */
+    }
+}
+----
+
+and generates comments like this:
+
+----
+class Foo {
+    /**
+     * frobnicates a Foo.
+     *
+     * @param x is a Something
+     * @param y is a SomethingElse
+     * @returns Nothing
+     */
+    void frobnicate(Something x, SomethingElse y) {
+    /* ... blah */
+    }
+}
+----
+
+== Automated refactoring
+This project aims to take a Java project and eliminate common errors in Freshman code, and in large projects.
+
+For example, it will translate code like this:
+
+----
+if (condition == true) {
+    /* ... blah ... */
+}
+----
+
+Into this:
+
+----
+if (condition) {
+    /* ... blah ... */
+}
+----
+
+It will translate code like this:
+
+----
+if (ch == 'c') {
+    /* ... blah ... */
+} else if (ch == 'f') {
+    /* ... blah ... */
+} else if (ch == 'p') {
+    /* ... blah ... */
+}
+----
+
+Into this:
+
+----
+switch (ch) {
+case 'c':
+    /* ... blah ... */
+    break;
+case 'f':
+    /* ... blah ... */
+    break;
+case 'p':
+    /* ... blah ... */
+    break;    
+}
+
+----
+
+And so on.
+
+== Test-case generation
+This project also aims to generate a separate test suite for Java projects.
+
+The project should generate test classes for every method and every class for the system under test.
+It should distinguish test code from regular code in the project.
+
+For example, to test +Foo.baz+:
+
+----
+class Bar {
+    int x;
+    int y;
+    Bar(int x, int y) {
+    /* ... blah blah blah ... */
+    }
+}
+
+class Foo {
+
+    static int baz(Bar a, Bar b) {
+    /* ... blah blah blah ... */
+    }
+}
+----
+
+. We need to examine the method parameters of +baz+ and, in turn, construct instances of +Bar+.
+. This requires examining either the class structure or it requires looking for constructors of Bar.
+. This could, in turn, require more visits to other classes until we reach a primitive type, if the constructor itself requires non-primitive arguments.
+
+The idea is that we generate values for primitive types by generating values via brute force.
+
+So, a test suite for this would consist of something like this:
+
+----
+Foo.baz(new Bar(-1,-1), new Bar(0,0));
+Foo.baz(new Bar(0,0), new Bar(1,1));
+Foo.baz(new Bar(Integer.MAX_INT, Integer.MAX_INT), new Bar(Integer.MIN_INT, Integer.MIN_INT));
+... etc. ...
+----
+
+== Java source to C++ translation
+Traverse through Java source and pretty print C++ equivalent code.
+There's a mismatch between C++ and Java, so therein lies the pain.
+
+== Search engine for code
+Index source code classes and methods, and their dependencies.
+
+For example,
+
+----
+class Bar {
+    int x;
+    int y;
+    Bar(int x, int y) {
+    /* ... blah blah blah ... */
+    }
+}
+
+class Foo {
+
+    static int baz(Bar a, Bar b) {
+    /* ... blah blah blah ... */
+    }
+}
+----
+
+In this example, the +baz+ method in +Foo+ uses +Bar+ objects, therefore +baz+ has a dependency on +Bar+
+
+Using this knowledge, we can build up a graph of dependencies among methods and types to make inferences about which types are 'central' in a project.
+
+Then, using PageRank, we can rank classes and methods by their centrality to the project to find useful code while doing keyword searches, presumably indexed using something like http://lucene.apache.org/[Lucene].
+
+== Setup HOW-TO
+From the command line:
+
+----
+./gradlew build                                # Build the source
+./gradlew eclipse                              # Generate eclipse project
+./gradlew fatjar                               # Generate a jar file (this takes a while)
+java -jar build/libs/jdt-project-1-0.0.1.jar . # Run the program from the command line
+----
+
+Then, in Eclipse, go to 'Import' -> 'Existing Projects into Workspace' and look for this project.
+
+== Documentation
+
+http://help.eclipse.org/helios/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Foverview-summary.html[Eclipse JDT]
